@@ -15,4 +15,4 @@ stop:
 
 ## run: starts http services
 run-proxy-server:
-	go run cmd/main.go
+	go run server/cmd/main.go
