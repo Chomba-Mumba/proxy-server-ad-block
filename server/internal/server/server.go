@@ -3,7 +3,6 @@ package server
 import (
 	"fmt"
 	"net/http"
-	"net/url"
 
 	"github.com/chomba-mumba/proxy-server-ad-block/internal/configs"
 )
@@ -17,21 +16,19 @@ func Run() error {
 	}
 
 	// create new router
-	mux := http.NewServeMux()
+	router := http.NewServeMux()
 
 	//health check endpoint
-	mux.HandleFunc("/health", health)
-	//fmt.Printf("erererer %v", config)
-	// regsiter config resource and register them into router
-	for _, resource := range config.Resources {
-		url, _ := url.Parse(resource.DestinationURL)
-		proxy := NewProxy(url)
-		mux.HandleFunc(resource.Endpoint, ProxyRequestHandler(proxy, url, resource.Endpoint))
-	}
+	router.HandleFunc("/health", health)
 
-	fmt.Printf("running proxy server on port %s", config.Server.ListenPort)
+	var proxyHandler ProxyRequestHandler
+
+	router.HandleFunc("/proxy", proxyHandler.HandleHTTP)
+
 	//running proxy server
-	err = http.ListenAndServe(config.Server.Host+":"+config.Server.ListenPort, mux)
+	fmt.Printf("running proxy server on port %s\n", config.Server.ListenPort)
+
+	err = http.ListenAndServe(config.Server.Host+":"+config.Server.ListenPort, router)
 	if err != nil {
 		return fmt.Errorf("could not start the server: %v", err)
 	}

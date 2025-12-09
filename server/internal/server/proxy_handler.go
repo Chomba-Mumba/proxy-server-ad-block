@@ -2,33 +2,46 @@ package server
 
 import (
 	"fmt"
+	"io"
 	"net/http"
-	"net/http/httputil"
-	"net/url"
-	"strings"
 	"time"
 )
 
-func NewProxy(target *url.URL) *httputil.ReverseProxy {
-	proxy := httputil.NewSingleHostReverseProxy(target) // TODO - change to forward proxy
-	return proxy
+type ProxyRequestHandler struct {
+	temp string
 }
 
-func ProxyRequestHandler(proxy *httputil.ReverseProxy, url *url.URL, endpoint string) func(http.ResponseWriter, *http.Request) {
-	return func(w http.ResponseWriter, r *http.Request) {
-		fmt.Printf("[PROXY SERVER] Request received at %s at %s \n", r.URL, time.Now().UTC())
-		//update headers to allow for SSL direction
-		r.URL.Host = url.Host
-		r.URL.Scheme = url.Scheme
-		r.Header.Set("X-Forward-Host", r.Header.Get("Host"))
-		r.Host = url.Host
+func (prh ProxyRequestHandler) HandleHTTP(w http.ResponseWriter, r *http.Request) {
+	fmt.Printf("[PROXY SERVER] request received at %s at %s \n forwading request...\n", r.URL, time.Now().UTC())
 
-		//trim reverseProxyRouterPrefix
-		path := r.URL.Path
-		r.URL.Path = strings.TrimLeft(path, endpoint)
+	if r.Host == "" {
+		http.Error(w, "Host Not Found", http.StatusNotFound)
+		return
+	}
 
-		//ServerHttp is non-blocking and utilises a go routine under the hood
-		fmt.Printf("[ PROXY SERVER] Proxying request to %s at %s \n", r.URL, time.Now().UTC())
-		proxy.ServeHTTP(w, r)
+	r.URL.Host = r.Host
+	r.URL.Scheme = "http"
+
+	resp, err := http.DefaultTransport.RoundTrip(r)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusServiceUnavailable)
+		return
+	}
+
+	fmt.Printf("[PROXY SERVER] response received from %s \n", r.Host)
+
+	//copy response to http writer
+	defer resp.Body.Close() // defer till done copying response
+
+	copyHeader(w.Header(), resp.Header)
+	w.WriteHeader(resp.StatusCode)
+	io.Copy(w, resp.Body)
+}
+
+func copyHeader(dst, src http.Header) {
+	for k, vv := range src {
+		for _, v := range vv {
+			dst.Add(k, v)
+		}
 	}
 }

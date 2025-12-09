@@ -4,11 +4,5 @@ server:
 
 resources:
   - name: Server1
-    endpoint: /Server1
+    endpoint: /server1
     destinationUrl: "http://localhost:9001"
-  - name: Server2
-    endpoint: /Server2
-    destinationUrl: "http://localhost:9002"
-  - name: Server3
-    endpoint: /Server3
-    destinationUrl: "http://localhost:9003"
