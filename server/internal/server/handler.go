@@ -8,6 +8,16 @@ import (
 	"time"
 )
 
+func handleRequest(w http.ResponseWriter, r *http.Request) {
+	if r.Method == http.MethodConnect {
+		handleTunneling(w, r)
+		return
+	} else {
+		handleHttp(w, r)
+		return
+	}
+}
+
 func handleTunneling(w http.ResponseWriter, r *http.Request) {
 	dest_conn, err := net.DialTimeout("tcp", r.Host, 10*time.Second)
 	if err != nil {
@@ -34,8 +44,8 @@ func transfer(destination io.WriteCloser, source io.ReadCloser) {
 	io.Copy(destination, source)
 }
 
-func ProxyHandler(w http.ResponseWriter, r *http.Request) {
-	fmt.Printf("[PROXY SERVER] request received at %s at %s \n forwading request...\n", r.URL, time.Now().UTC())
+func handleHttp(w http.ResponseWriter, r *http.Request) {
+	fmt.Printf("[PROXY SERVER] HTTP request received at %s at %s \n forwading request...\n", r.URL, time.Now().UTC())
 
 	if r.Host == "" {
 		http.Error(w, "Host Not Found", http.StatusNotFound)
@@ -43,10 +53,6 @@ func ProxyHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	//assign Proxyrequest
-
-	r.URL.Host = r.Host
-	r.URL.Scheme = "http"
-
 	resp, err := http.DefaultTransport.RoundTrip(r)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusServiceUnavailable)
