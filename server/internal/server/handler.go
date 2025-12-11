@@ -7,17 +7,15 @@ import (
 	"time"
 )
 
-type ProxyRequestHandler struct {
-	temp string
-}
-
-func (prh ProxyRequestHandler) HandleHTTP(w http.ResponseWriter, r *http.Request) {
+func ProxyHandler(w http.ResponseWriter, r *http.Request) {
 	fmt.Printf("[PROXY SERVER] request received at %s at %s \n forwading request...\n", r.URL, time.Now().UTC())
 
 	if r.Host == "" {
 		http.Error(w, "Host Not Found", http.StatusNotFound)
 		return
 	}
+
+	//assign Proxyrequest
 
 	r.URL.Host = r.Host
 	r.URL.Scheme = "http"

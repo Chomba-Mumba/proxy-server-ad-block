@@ -21,9 +21,7 @@ func Run() error {
 	//health check endpoint
 	router.HandleFunc("/health", health)
 
-	var proxyHandler ProxyRequestHandler
-
-	router.HandleFunc("/proxy", proxyHandler.HandleHTTP)
+	router.HandleFunc("/proxy", ProxyHandler)
 
 	//running proxy server
 	fmt.Printf("running proxy server on port %s\n", config.Server.ListenPort)
