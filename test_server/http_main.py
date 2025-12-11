@@ -6,3 +6,5 @@ app = Flask(__name__)
 def hello_world():
     resp = "hello world"
     return resp, 200
+
+app.run()
