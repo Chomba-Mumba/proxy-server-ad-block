@@ -16,15 +16,9 @@ func Run() error {
 		return fmt.Errorf("[PROXY SERVER] could not load configurations: %v", err)
 	}
 
-	// create new router
-	router := http.NewServeMux()
-
-	router.HandleFunc("/health", health)
-	router.HandleFunc("/proxy", handleRequest)
-
 	server := &http.Server{
-		Addr:         config.Server.ListenPort,
-		Handler:      router,
+		Addr:         fmt.Sprintf("localhost:%s", config.Server.ListenPort),
+		Handler:      http.HandlerFunc(handleRequest),
 		ReadTimeout:  2 * time.Second,
 		WriteTimeout: 2 * time.Second,
 		IdleTimeout:  2 * time.Second,
