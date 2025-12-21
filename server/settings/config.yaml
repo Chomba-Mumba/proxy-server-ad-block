@@ -1,6 +1,6 @@
 server:
   host: "localhost"
-  listenPort: "8080"
+  listenPort: "5353"
 
 resources:
   - name: Server1
