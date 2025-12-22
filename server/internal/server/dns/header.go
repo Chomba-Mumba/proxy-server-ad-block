@@ -1,12 +1,9 @@
-package resolver
+package dns
 
 import (
 	"bytes"
 	"encoding/binary"
 )
-
-type Message struct {
-}
 
 type Header struct {
 	ID      uint16
@@ -36,9 +33,10 @@ func (hf *HeaderFlag) GenerateFlag() uint16 {
 	tc := uint16(boolToInt(hf.TC))
 	rd := uint16(boolToInt(hf.RD))
 	ra := uint16(boolToInt(hf.RA))
-	z := uint16(hf.Z)
+	z := uint16(hf.Z) // 3 bits
 	rcode := uint16(hf.RCode)
 
+	//use bitwise operation to shift bits and return flag
 	return uint16(qr<<15 | opcode<<11 | aa<<10 | tc<<9 | rd<<8 | ra<<7 | z<<4 | rcode)
 }
 
