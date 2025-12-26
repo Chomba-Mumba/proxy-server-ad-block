@@ -1,41 +1,59 @@
 package dns
 
 import (
-	"strconv"
+	"bytes"
+	"encoding/binary"
+	"fmt"
 	"strings"
 )
 
 type Question struct {
-	QName  string // converted domain name
-	QType  string // query type
-	QClass string // query class
+	QName  []byte // byte slice representation of a string
+	QType  uint16 // query type
+	QClass uint16 // query class
 }
 
-func (q *Question) encodeName(name string) string {
-	domainParts := strings.Split(name, ".")
-	qname := ""
+func (q *Question) newQuestion(domain string, qtype uint16, qclass uint16) error {
+	q.QName = q.encodeQName(domain)
+
+	q.QType = qtype
+
+	q.QClass = qclass
+
+	return nil
+}
+
+func (q *Question) encodeQName(domain string) []byte {
+	domainParts := strings.Split(domain, ".")
+	var qname []byte
 	for _, part := range domainParts {
-		newDomainPart := string(byte(len(part))) + part
-		qname += newDomainPart
+		qname = append(qname, byte(len(part)))
+		qname = append(qname, []byte(part)...)
+
 	}
-	return qname + "\x00"
+	qname = append(qname, 0x00) // root terminator
+
+	return qname
 }
 
-func (q *Question) decodeName(name string) string {
-	encodedDomainSlice := strings.Split(string(name[len(name)-4]), "")
-	domain := ""
-	temp := 0 //start of last string
+// convert question to its binary representation
+func (q *Question) ToBytes() ([]byte, error) {
+	buf := new(bytes.Buffer)
 
-	for i := 0; i < len(name)-4; i++ {
-		if encodedDomainSlice[i] == `\` {
-			domain += strings.Join(encodedDomainSlice[i-temp:i], "")
-			temp = i + 3
-		}
+	_, err := buf.Write([]byte(q.QName))
+	if err != nil {
+		return nil, fmt.Errorf("error  in creating buffer: %v", err)
 	}
-	return domain
-}
 
-func isNumeric(s string) bool {
-	_, err := strconv.Atoi(s)
-	return err == nil
+	err = binary.Write(buf, binary.BigEndian, q.QType)
+	if err != nil {
+		return nil, fmt.Errorf("error in converting data to binary representation: %v", err)
+	}
+
+	err = binary.Write(buf, binary.BigEndian, q.QClass)
+	if err != nil {
+		return nil, fmt.Errorf("error in converting data to binary representation: %v", err)
+	}
+
+	return buf.Bytes(), nil
 }
