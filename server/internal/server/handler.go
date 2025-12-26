@@ -9,6 +9,7 @@ import (
 )
 
 func handleRequest(w http.ResponseWriter, r *http.Request) {
+	fmt.Printf("method %s", r.Method)
 	if r.Method == http.MethodConnect {
 		handleTunneling(w, r)
 		return
@@ -19,6 +20,7 @@ func handleRequest(w http.ResponseWriter, r *http.Request) {
 }
 
 func handleTunneling(w http.ResponseWriter, r *http.Request) {
+	// initialise connection to server
 	dest_conn, err := net.DialTimeout("tcp", r.Host, 10*time.Second)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusServiceUnavailable)
@@ -27,13 +29,14 @@ func handleTunneling(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
 	hijacker, ok := w.(http.Hijacker)
 	if !ok {
-		http.Error(w, "Hijacking not supported", http.StatusInternalServerError)
+		http.Error(w, "[PROXY SERVER] hijacking not supported", http.StatusInternalServerError)
 		return
 	}
 	client_conn, _, err := hijacker.Hijack()
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusServiceUnavailable)
 	}
+	//forward data both ways
 	go transfer(dest_conn, client_conn)
 	go transfer(client_conn, dest_conn)
 }
@@ -48,7 +51,7 @@ func handleHttp(w http.ResponseWriter, r *http.Request) {
 	fmt.Printf("[PROXY SERVER] HTTP request received at %s at %s \n forwading request...\n", r.URL, time.Now().UTC())
 
 	if r.Host == "" {
-		http.Error(w, "Host Not Found", http.StatusNotFound)
+		http.Error(w, "[PROXY SERVER] host Not Found", http.StatusNotFound)
 		return
 	}
 
