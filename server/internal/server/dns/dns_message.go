@@ -1,14 +1,14 @@
 package dns
 
 type DNSMessage struct {
-	Header        Header
-	Questions     []Question
+	Header        *Header
+	Questions     []*Question
 	Answers       []ResourceRecord
 	AuthorityRRs  []ResourceRecord
 	AdditionalRRs []ResourceRecord
 }
 
-func NewDNSMessage(header Header, questions []Question, records ...[]ResourceRecord) *DNSMessage {
+func NewDNSMessage(header *Header, questions []*Question, records ...[]ResourceRecord) *DNSMessage {
 	answers := make([]ResourceRecord, 0)
 	authorityRRs := make([]ResourceRecord, 0)
 	additionalRRs := make([]ResourceRecord, 0)

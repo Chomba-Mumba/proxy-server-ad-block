@@ -13,29 +13,6 @@ type Question struct {
 	QClass uint16 // query class
 }
 
-func (q *Question) newQuestion(domain string, qtype uint16, qclass uint16) error {
-	q.QName = q.encodeQName(domain)
-
-	q.QType = qtype
-
-	q.QClass = qclass
-
-	return nil
-}
-
-func (q *Question) encodeQName(domain string) []byte {
-	domainParts := strings.Split(domain, ".")
-	var qname []byte
-	for _, part := range domainParts {
-		qname = append(qname, byte(len(part)))
-		qname = append(qname, []byte(part)...)
-
-	}
-	qname = append(qname, 0x00) // root terminator
-
-	return qname
-}
-
 // convert question to its binary representation
 func (q *Question) ToBytes() ([]byte, error) {
 	buf := new(bytes.Buffer)
@@ -56,4 +33,21 @@ func (q *Question) ToBytes() ([]byte, error) {
 	}
 
 	return buf.Bytes(), nil
+}
+
+func encodeQName(domain string) []byte {
+	domainParts := strings.Split(domain, ".")
+	var qname []byte
+	for _, part := range domainParts {
+		qname = append(qname, byte(len(part)))
+		qname = append(qname, []byte(part)...)
+
+	}
+	qname = append(qname, 0x00) // root terminator
+
+	return qname
+}
+
+func decodeQName(qname []byte) string {
+	return ""
 }

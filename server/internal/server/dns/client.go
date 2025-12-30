@@ -1,6 +1,7 @@
 package dns
 
 import (
+	"bytes"
 	"fmt"
 	"net"
 	"time"
@@ -11,16 +12,16 @@ type Client struct {
 	port int
 }
 
-func (c *Client) newClient(ipAddress string, port int) error {
+func newClient(ipAddress string, port int) (*Client, error) {
 	i := net.ParseIP(ipAddress)
 	if i == nil {
-		return fmt.Errorf("%v is an invalid ip address", ipAddress)
+		return nil, fmt.Errorf("%v is an invalid ip address", ipAddress)
 	}
-	c.ip = i
 
-	c.port = port
-
-	return nil
+	return &Client{
+		ip:   i,
+		port: port,
+	}, nil
 }
 
 func (c *Client) ipType() (string, error) {
@@ -75,13 +76,9 @@ func (c *Client) Query(message []byte) ([]byte, error) {
 	response := buf[:n]
 
 	//check if request matches the repsonse ID
-	if !IDMatcher(message[:2], response[:2]) {
+	if !bytes.Equal(message[:2], response[:2]) {
 		return nil, fmt.Errorf("the response ID does not match the request ID")
 	}
 
 	return response, nil
-}
-
-func IDMatcher(message []byte, response []byte) bool {
-	return true
 }
